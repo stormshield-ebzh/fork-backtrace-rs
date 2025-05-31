@@ -3,7 +3,7 @@
 #[cfg(feature = "serde")]
 use crate::resolve;
 use crate::PrintFmt;
-use crate::{resolve_frame, trace, BacktraceFmt, Symbol, SymbolName};
+use crate::{avma_to_svma_frame, resolve_frame, trace, BacktraceFmt, Symbol, SymbolName};
 use core::ffi::c_void;
 use std::fmt;
 use std::path::{Path, PathBuf};
@@ -205,6 +205,17 @@ impl Frame {
             }
         }
         symbols.into_boxed_slice()
+    }
+
+    /// Resolve all addresses in the frame to their symbolic names.
+    fn avma_to_svma(&self) -> Option<*mut c_void> {
+        match *self {
+            Frame::Raw(ref f) => avma_to_svma_frame(f),
+            #[cfg(feature = "serde")]
+            Frame::Deserialized { ip, .. } => {
+                avma_to_svma(ip.into_void());
+            }
+        }
     }
 }
 
@@ -427,6 +438,12 @@ impl BacktraceFrame {
         if self.symbols.is_none() {
             self.symbols = Some(self.frame.resolve_symbols());
         }
+    }
+
+    /// Resolve all addresses in this frame to their symbolic names.
+    ///
+    pub fn avma_to_svma(&mut self) -> Option<*mut c_void> {
+        self.frame.avma_to_svma()
     }
 }
 

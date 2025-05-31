@@ -500,6 +500,23 @@ pub unsafe fn resolve(what: ResolveWhat<'_>, cb: &mut dyn FnMut(&super::Symbol))
     }
 }
 
+pub unsafe fn avma_to_svma(what: ResolveWhat<'_>) -> Option<*mut c_void> {
+    let addr = what.address_or_ip();
+
+    let mut ret = None;
+
+    Cache::with_global(|cache| {
+        let (_lib, addr) = match cache.avma_to_svma(addr.cast_const().cast::<u8>()) {
+            Some(pair) => pair,
+            None => return,
+        };
+
+        ret = Some(addr as *mut c_void);
+    });
+
+    ret
+}
+
 pub enum Symbol<'a> {
     /// We were able to locate frame information for this symbol, and
     /// `addr2line`'s frame internally has all the nitty gritty details.

@@ -7,6 +7,10 @@ use core::marker;
 
 pub unsafe fn resolve(_addr: ResolveWhat<'_>, _cb: &mut dyn FnMut(&super::Symbol)) {}
 
+pub unsafe fn avma_to_svma(what: ResolveWhat<'_>) -> Option<*mut c_void> {
+    None
+}
+
 pub struct Symbol<'a> {
     _marker: marker::PhantomData<&'a i32>,
 }
