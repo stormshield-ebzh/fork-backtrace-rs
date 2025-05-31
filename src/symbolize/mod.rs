@@ -63,6 +63,13 @@ pub fn resolve<F: FnMut(&Symbol)>(addr: *mut c_void, cb: F) {
     unsafe { resolve_unsynchronized(addr, cb) }
 }
 
+/// TODO
+#[cfg(feature = "std")]
+pub fn lib_bias(addr: *mut c_void) -> Option<*mut c_void> {
+    let _guard = crate::lock::lock();
+    unsafe { lib_bias_unsynchronized(addr) }
+}
+
 /// Resolve a previously captured frame to a symbol, passing the symbol to the
 /// specified closure.
 ///
@@ -103,6 +110,14 @@ pub fn resolve<F: FnMut(&Symbol)>(addr: *mut c_void, cb: F) {
 pub fn resolve_frame<F: FnMut(&Symbol)>(frame: &Frame, cb: F) {
     let _guard = crate::lock::lock();
     unsafe { resolve_frame_unsynchronized(frame, cb) }
+}
+
+/// Resolve a previously captured frame to a symbol, passing the symbol to the
+/// specified closure.
+#[cfg(feature = "std")]
+pub fn lib_bias_frame(frame: &Frame) -> Option<*mut c_void> {
+    let _guard = crate::lock::lock();
+    unsafe { lib_bias_frame_unsynchronized(frame) }
 }
 
 pub enum ResolveWhat<'a> {
@@ -162,6 +177,11 @@ where
     unsafe { imp::resolve(ResolveWhat::Address(addr), &mut cb) }
 }
 
+/// TODO
+pub unsafe fn lib_bias_unsynchronized(addr: *mut c_void) -> Option<*mut c_void> {
+    imp::lib_bias(ResolveWhat::Address(addr))
+}
+
 /// Same as `resolve_frame`, only unsafe as it's unsynchronized.
 ///
 /// This function does not have synchronization guarantees but is available
@@ -176,6 +196,10 @@ where
     F: FnMut(&Symbol),
 {
     unsafe { imp::resolve(ResolveWhat::Frame(frame), &mut cb) }
+}
+
+pub unsafe fn lib_bias_frame_unsynchronized(frame: &Frame) -> Option<*mut c_void> {
+    imp::lib_bias(ResolveWhat::Frame(frame))
 }
 
 /// A trait representing the resolution of a symbol in a file.

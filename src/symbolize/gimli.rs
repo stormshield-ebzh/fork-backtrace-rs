@@ -381,6 +381,15 @@ impl Cache {
     }
 
     fn avma_to_svma(&self, addr: *const u8) -> Option<(usize, *const u8)> {
+        self.lib_bias(addr).map(|(i, lib_bias)| {
+            // Now that we know `lib` contains `addr`, we can offset with
+            // the bias to find the stated virtual memory address.
+            let svma = (addr as usize).wrapping_sub(lib_bias as usize);
+            (i, svma as *const u8)
+        })
+    }
+
+    fn lib_bias(&self, addr: *const u8) -> Option<(usize, *const u8)> {
         self.libraries
             .iter()
             .enumerate()
@@ -406,10 +415,7 @@ impl Cache {
                     return None;
                 }
 
-                // Now that we know `lib` contains `addr`, we can offset with
-                // the bias to find the stated virtual memory address.
-                let svma = (addr as usize).wrapping_sub(lib.bias);
-                Some((i, svma as *const u8))
+                Some((i, lib.bias as *const u8))
             })
             .next()
     }
@@ -498,6 +504,23 @@ pub unsafe fn resolve(what: ResolveWhat<'_>, cb: &mut dyn FnMut(&super::Symbol))
             }
         });
     }
+}
+
+pub unsafe fn lib_bias(what: ResolveWhat<'_>) -> Option<*mut c_void> {
+    let addr = what.address_or_ip();
+
+    let mut ret = None;
+
+    Cache::with_global(|cache| {
+        let (_lib, addr) = match cache.lib_bias(addr.cast_const().cast::<u8>()) {
+            Some(pair) => pair,
+            None => return,
+        };
+
+        ret = Some(addr as *mut c_void);
+    });
+
+    ret
 }
 
 pub enum Symbol<'a> {

@@ -217,6 +217,10 @@ unsafe fn resolve_with_inline(
     Some(())
 }
 
+pub unsafe fn lib_bias(what: ResolveWhat<'_>) -> Option<*mut c_void> {
+    None
+}
+
 unsafe fn do_resolve(
     sym_from_addr: impl FnOnce(*mut SYMBOL_INFOW) -> BOOL,
     get_line_from_addr: impl FnOnce(&mut IMAGEHLP_LINEW64) -> BOOL,

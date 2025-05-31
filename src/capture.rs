@@ -3,7 +3,9 @@
 #[cfg(feature = "serde")]
 use crate::resolve;
 use crate::PrintFmt;
-use crate::{resolve_frame, trace, BacktraceFmt, Symbol, SymbolName};
+use crate::{
+    lib_bias_frame, resolve_frame, trace, BacktraceFmt, Symbol, SymbolName,
+};
 use core::ffi::c_void;
 use std::fmt;
 use std::path::{Path, PathBuf};
@@ -205,6 +207,17 @@ impl Frame {
             }
         }
         symbols.into_boxed_slice()
+    }
+
+    /// Resolve all addresses in the frame to their symbolic names.
+    fn lib_bias(&self) -> Option<*mut c_void> {
+        match *self {
+            Frame::Raw(ref f) => lib_bias_frame(f),
+            #[cfg(feature = "serde")]
+            Frame::Deserialized { ip, .. } => {
+                lib_bias(ip.into_void());
+            }
+        }
     }
 }
 
@@ -427,6 +440,12 @@ impl BacktraceFrame {
         if self.symbols.is_none() {
             self.symbols = Some(self.frame.resolve_symbols());
         }
+    }
+
+    /// Resolve all addresses in this frame to their symbolic names.
+    ///
+    pub fn lib_bias(&mut self) -> Option<*mut c_void> {
+        self.frame.lib_bias()
     }
 }
 
