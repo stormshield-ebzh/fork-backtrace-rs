@@ -43,3 +43,4 @@ impl Symbol<'_> {
 }
 
 pub unsafe fn clear_symbol_cache() {}
+pub unsafe fn init_cache() {}

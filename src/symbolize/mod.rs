@@ -452,6 +452,15 @@ pub fn clear_symbol_cache() {
     }
 }
 
+/// TODO
+#[cfg(feature = "std")]
+pub fn init_cache() {
+    let _guard = crate::lock::lock();
+    unsafe {
+        imp::init_cache();
+    }
+}
+
 cfg_if::cfg_if! {
     if #[cfg(miri)] {
         mod miri;

@@ -118,6 +118,9 @@ mod types;
 #[cfg(feature = "std")]
 pub use self::symbolize::clear_symbol_cache;
 
+#[cfg(feature = "std")]
+pub use self::symbolize::init_cache;
+
 mod print;
 pub use print::{BacktraceFmt, BacktraceFrameFmt, PrintFmt};
 

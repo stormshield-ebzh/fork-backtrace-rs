@@ -349,6 +349,14 @@ pub unsafe fn clear_symbol_cache() {
     }
 }
 
+// unsafe because this is required to be externally synchronized
+pub unsafe fn init_cache() {
+    Cache::with_global(|_| {
+        // instanciation of the cache
+        // will load libraries
+    });
+}
+
 impl Cache {
     fn new() -> Cache {
         Cache {
